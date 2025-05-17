@@ -1,0 +1,12 @@
+{
+  "firstName": "Kim",
+  "middleName": "Bobby",
+  "lastName": "Jiwon",
+  "username": "kimjiwon",
+  "password": "kimjiwon123",
+  "entitlement": 5,
+  "leaveType": "CAN - Bereavement",
+  "fromDate": "2025-05-25",
+  "toDate": "2025-05-26",
+  "employeeID": "8888"
+}
