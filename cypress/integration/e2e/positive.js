@@ -1,11 +1,16 @@
 /// <reference types="cypress" />
 
+function changeDateFormat(tanggal) {
+  const [yyyy, mm, dd] = tanggal.split('-'); // Pakai '-' sebagai pemisah
+  return `${yyyy}-${dd}-${mm}`; // Format yang diinginkan
+}
+
 describe('E2E Flow - Employee Leave Management', function () {
   beforeEach(function () {
     cy.fixture('admin').as('admin');
     cy.fixture('employee').as('newEmployee');
   });
-  it.skip('Add new employee', function () {
+  it('Add new employee', function () {
     cy.visit(
       'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
     );
@@ -37,7 +42,7 @@ describe('E2E Flow - Employee Leave Management', function () {
       .type(this.newEmployee.password);
     cy.contains('button', 'Save').click();
 
-    cy.contains('Successfully Saved').should('exist');
+    cy.contains('Successfully Saved', { timeout: 5000 }).should('exist');
     cy.screenshot('01_add_employee_success');
     cy.location('pathname', { timeout: 5000 }).should(
       'include',
@@ -45,7 +50,7 @@ describe('E2E Flow - Employee Leave Management', function () {
     );
   });
 
-  it.skip('Give leave entitlement for new employee', function () {
+  it('Give leave entitlement for new employee', function () {
     cy.visit(
       'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
     );
@@ -81,10 +86,10 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.contains('button', 'Confirm').click();
 
     cy.contains('Successfully Saved').should('exist');
-    cy.screenshot('02_add_entitlement_success');
+    cy.screenshot('02_add_entitlement_success', { timeout: 5000 });
   });
 
-  it.skip('Employee applies for leave', function () {
+  it('Employee applies for leave', function () {
     cy.visit(
       'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
     );
@@ -104,11 +109,11 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.get('textarea').type('Requesting leave');
     cy.get('button[type=submit]').click();
 
-    cy.contains('Successfully Saved').should('exist');
+    cy.contains('Successfully Saved', { timeout: 5000 }).should('exist');
     cy.screenshot('03_apply_leave_success');
   });
 
-  it.skip('Admin approve leave', function () {
+  it('Admin approve leave', function () {
     cy.visit(
       'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
     );
@@ -125,17 +130,52 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.get('.oxd-autocomplete-dropdown')
       .should('be.visible')
       .contains(
-        `${this.newEmployee.firstName} ${this.newEmployee.middleName} ${this.newEmployee.lastName}`
+        `${this.newEmployee.firstName} ${this.newEmployee.middleName} ${this.newEmployee.lastName}`,
+        { timeout: 5000 }
       )
       .click();
 
+    cy.get('.oxd-multiselect-wrapper')
+      .contains('Pending Approval')
+      .then(($el) => {
+        if ($el.length) {
+          cy.log('Pending Approval sudah dipilih');
+        } else {
+          cy.get('.oxd-multiselect-wrapper')
+            .click()
+            .then(() => {
+              cy.contains('Pending Approval').click();
+            });
+        }
+      });
+
+    cy.get('.oxd-input-group.oxd-input-field-bottom-space')
+      .eq(3) //leave type
+      .within(() => {
+        cy.get('.oxd-select-text-input')
+          .click()
+          .then(() => {
+            cy.get('.oxd-select-dropdown').should('be.visible');
+            cy.contains(this.newEmployee.leaveType).click();
+          });
+      });
+
     cy.get('button[type=submit]').contains('Search').click();
 
-    cy.wait(2000);
-    cy.get('.oxd-table-card').first().click();
-    cy.get('button').contains('Approve').click();
+    const tanggalCuti =
+      changeDateFormat(this.newEmployee.fromDate) +
+      ' to ' +
+      changeDateFormat(this.newEmployee.toDate);
 
-    cy.contains('Successfully Updated').should('exist');
+    cy.wait(2000);
+    cy.contains(tanggalCuti)
+      .closest('.oxd-table-row') // Ganti tr menjadi class row yang kamu pakai
+      .within(() => {
+        cy.contains('Requesting leave').should('exist');
+        cy.get('button').contains('Approve').click();
+      });
+
+    cy.contains('Successfully Updated', { timeout: 5000 }).should('exist');
     cy.screenshot('04_approve_leave_success');
   });
 
@@ -150,11 +190,16 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.get('a[href="/web/index.php/leave/viewLeaveModule"]').click();
     cy.contains('My Leave').click();
 
-    // cy.get('.oxd-date-input').eq(0).type(this.newEmployee.fromDate);
-    // cy.get('.oxd-date-input').eq(1).clear().type(this.newEmployee.fromDate);
-    // cy.get('button[type=submit]').click();
+    const tanggalCuti =
+      changeDateFormat(this.newEmployee.fromDate) +
+      ' to ' +
+      changeDateFormat(this.newEmployee.toDate);
 
-    cy.contains('Approved').should('exist');
+    cy.contains(tanggalCuti)
+      .closest('.oxd-table-row') // Ganti tr menjadi class row yang kamu pakai
+      .within(() => {
+        cy.contains('Taken', { timeout: 5000 }).should('exist');
+      });
     cy.screenshot('05_check_leave_status');
   });
 });

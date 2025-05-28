@@ -21,7 +21,7 @@ describe('Negative Case', function () {
     cy.get('textarea').type('Forgot to fill date');
     cy.get('button[type=submit]').click();
 
-    cy.get('.oxd-input-group__message').should('exist');
+    cy.get('.oxd-input-group__message', { timeout: 5000 }).should('exist');
     cy.screenshot('06_apply_leave_no_date');
   });
 });
