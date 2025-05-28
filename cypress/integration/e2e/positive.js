@@ -23,23 +23,8 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.get('input[name="firstName"]').type(this.newEmployee.firstName);
     cy.get('input[name="middleName"]').type(this.newEmployee.middleName);
     cy.get('input[name="lastName"]').type(this.newEmployee.lastName);
-    cy.get('.oxd-input.oxd-input--active')
-      .eq(3)
-      .clear()
-      .type(this.newEmployee.employeeID);
-    cy.get('.oxd-switch-input').click();
-    cy.get('input[autocomplete="off"]')
-      .eq(0)
-      .clear()
-      .type(this.newEmployee.username);
-    cy.get('input[autocomplete="off"]')
-      .eq(1)
-      .clear()
-      .type(this.newEmployee.password);
-    cy.get('input[autocomplete="off"]')
-      .eq(2)
-      .clear()
-      .type(this.newEmployee.password);
+    cy.get('.oxd-input').eq(4).clear().type(this.newEmployee.employeeID);
+
     cy.contains('button', 'Save').click();
 
     cy.contains('Successfully Saved', { timeout: 5000 }).should('exist');
@@ -48,6 +33,51 @@ describe('E2E Flow - Employee Leave Management', function () {
       'include',
       '/pim/viewPersonalDetails'
     );
+  });
+
+  it('Add account for new employee', function () {
+    cy.visit(
+      'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login'
+    );
+    cy.get('input[name="username"]').clear().type(this.admin.username);
+    cy.get('input[name="password"]').clear().type(this.admin.password);
+    cy.get('button[type="submit"]').click();
+
+    cy.get('a[href="/web/index.php/admin/viewAdminModule"]').click();
+    cy.get(
+      'button[type="button"][class="oxd-button oxd-button--medium oxd-button--secondary"]'
+    ).click();
+
+    cy.get('.oxd-input').eq(1).click().type(this.newEmployee.username);
+    cy.get('.oxd-input').eq(2).click().type(this.newEmployee.password);
+    cy.get('.oxd-input').eq(3).click().type(this.newEmployee.password);
+    cy.get('.oxd-select-text-input')
+      .eq(0)
+      .click()
+      .then(() => {
+        cy.get('.oxd-select-dropdown').should('be.visible');
+        cy.contains(this.newEmployee.employeeRole).click();
+      });
+    cy.get('input[placeholder="Type for hints..."]').type(
+      `${this.newEmployee.firstName} ${this.newEmployee.middleName} ${this.newEmployee.lastName}`
+    );
+    cy.get('.oxd-autocomplete-dropdown')
+      .should('be.visible')
+      .contains(
+        `${this.newEmployee.firstName} ${this.newEmployee.middleName} ${this.newEmployee.lastName}`,
+        { timeout: 5000 }
+      )
+      .click();
+    cy.get('.oxd-select-text-input')
+      .eq(1)
+      .click()
+      .then(() => {
+        cy.get('.oxd-select-dropdown').should('be.visible');
+        cy.contains(this.newEmployee.employeeStatus).click();
+      });
+    cy.get('.oxd-button--secondary').contains('Save').click();
+    cy.contains('Successfully Saved', { timeout: 5000 }).should('exist');
+    cy.screenshot('02_add_account_employee_success');
   });
 
   it('Give leave entitlement for new employee', function () {
@@ -73,7 +103,8 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.get('.oxd-autocomplete-dropdown')
       .should('be.visible')
       .contains(
-        `${this.newEmployee.firstName} ${this.newEmployee.middleName} ${this.newEmployee.lastName}`
+        `${this.newEmployee.firstName} ${this.newEmployee.middleName} ${this.newEmployee.lastName}`,
+        { timeout: 5000 }
       )
       .click();
     cy.get('.oxd-select-text-input').eq(0).click();
@@ -85,8 +116,8 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.contains('button', 'Save').click();
     cy.contains('button', 'Confirm').click();
 
-    cy.contains('Successfully Saved').should('exist');
-    cy.screenshot('02_add_entitlement_success', { timeout: 5000 });
+    cy.contains('Successfully Saved', { timeout: 5000 }).should('exist');
+    cy.screenshot('03_add_entitlement_success');
   });
 
   it('Employee applies for leave', function () {
@@ -110,7 +141,7 @@ describe('E2E Flow - Employee Leave Management', function () {
     cy.get('button[type=submit]').click();
 
     cy.contains('Successfully Saved', { timeout: 5000 }).should('exist');
-    cy.screenshot('03_apply_leave_success');
+    cy.screenshot('04_apply_leave_success');
   });
 
   it('Admin approve leave', function () {
@@ -176,7 +207,7 @@ describe('E2E Flow - Employee Leave Management', function () {
       });
 
     cy.contains('Successfully Updated', { timeout: 5000 }).should('exist');
-    cy.screenshot('04_approve_leave_success');
+    cy.screenshot('05_approve_leave_success');
   });
 
   it('Employee check approved leave', function () {
@@ -200,6 +231,6 @@ describe('E2E Flow - Employee Leave Management', function () {
       .within(() => {
         cy.contains('Taken', { timeout: 5000 }).should('exist');
       });
-    cy.screenshot('05_check_leave_status');
+    cy.screenshot('06_check_leave_status');
   });
 });
